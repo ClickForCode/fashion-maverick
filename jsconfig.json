@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    //for absolute imports
     "baseUrl": "."
   }
 }
