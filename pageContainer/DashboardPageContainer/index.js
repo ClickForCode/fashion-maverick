@@ -14,6 +14,7 @@ const DashboardPageContainer = () => {
   const handleClick = async () => {
     await updateUserStateName(name);
     console.log(userStateName);
+    
   };
   return (
     <Flex
