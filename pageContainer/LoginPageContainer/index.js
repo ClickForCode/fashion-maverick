@@ -19,6 +19,7 @@ const InputComponent = ({
   type,
   errors,
   handleEmailErrors,
+  handlePasswordErrors,
   handleFormChange,
 }) => {
   return (
@@ -28,7 +29,7 @@ const InputComponent = ({
       maxW="100%"
       minW="30%"
       name={type}
-      onBlur={handleEmailErrors}
+      onBlur={type === "email" ? handleEmailErrors : handlePasswordErrors}
       onChange={handleFormChange}
       placeholder={type === "email" ? "Email" : "Password"}
       type={type}
@@ -39,13 +40,10 @@ const InputComponent = ({
 
 const LoginPageContainer = () => {
   //-----InternalStates
-  // const [isLoggedIn, setIsLoggedIn] = useState(false);
-
   const [formValues, setFormValues] = useState({
     email: "",
     password: "",
   });
-
   const [formErrors, setFormErrors] = useState({
     email: "",
     password: "",
@@ -59,7 +57,7 @@ const LoginPageContainer = () => {
     if (formErrors.email === "" && formErrors.password === "") {
       //api call to save data
       // router.push("/")
-      console.log(true, formErrors);
+      console.table(true, formErrors);
     } else {
       toast({
         title: "Error!!",
@@ -72,7 +70,7 @@ const LoginPageContainer = () => {
           backgroundColor: colors.red,
         },
       });
-      console.log(false, formErrors);
+      console.table(false, formErrors);
     }
   };
 
@@ -100,6 +98,8 @@ const LoginPageContainer = () => {
     }
   };
 
+
+  
   return (
     <Container minH="100vh" minW="40%">
       <Flex
@@ -124,34 +124,28 @@ const LoginPageContainer = () => {
           align="center"
           justify="center"
         >
-          <FormControl
-            isRequired
-            // isInvalid={formErrors.email !== ""}
-          >
+          <FormControl isRequired isInvalid={formErrors.email !== ""}>
             <InputComponent
               type="email"
               errors={formErrors.email}
               handleEmailErrors={(e) => handleEmailErrors(e.target.value)}
               handleFormChange={handleFormChange}
             />
-            {/* <FormErrorMessage color={colors.red}>
+            <FormErrorMessage color={colors.red}>
               {formErrors.email}
-            </FormErrorMessage> */}
+            </FormErrorMessage>
           </FormControl>
 
-          <FormControl
-            isRequired
-            // isInvalid={formErrors.password !== ""}
-          >
+          <FormControl isRequired isInvalid={formErrors.password !== ""}>
             <InputComponent
               type="password"
               errors={formErrors.password}
               handlePasswordErrors={(e) => handlePasswordErrors(e.target.value)}
               handleFormChange={handleFormChange}
             />
-            {/* <FormErrorMessage color={colors.red}>
+            <FormErrorMessage color={colors.red}>
               {formErrors.password}
-            </FormErrorMessage> */}
+            </FormErrorMessage>
           </FormControl>
           <Flex w="100%" justify="end">
             <Button

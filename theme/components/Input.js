@@ -5,7 +5,7 @@ const Input = {
   // The base styles for each part
   baseStyle: {
     field: {
-      border: `10px solid ${colors.black}`,
+      border: `3px solid ${colors.black}`,
       color: colors.black,
     },
   },

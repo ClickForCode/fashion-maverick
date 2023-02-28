@@ -15,6 +15,9 @@ export const validatePassword = (password) => {
   if (password === "") {
     return "Please enter your password";
   }
+  if (password.length < 8 || password.length > 15) {
+    return "Password Length should be between 8 and 15 characters";
+  }
   //regex for password containing at least one big alphabet, One Small alphabet one number and one special character
   const regex =
     /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[^a-zA-Z0-9])(?!.*\s).{8,15}$/;
