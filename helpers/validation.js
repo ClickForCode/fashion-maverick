@@ -46,35 +46,37 @@ export const validateName = (name) => {
 };
 
 export const validateCountry = (country) => {
-  const capitalized = country.charAt(0).toUpperCase() + country.slice(1);
-  const result = countryList.includes(capitalized)
-    ? ""
-    : "Please enter correct country";
-  console.log(country, capitalized, result);
+  if (typeof country !== "string" || country.length === 0) {
+    return "Please enter a valid country";
+  }
+  const regex = /^[a-zA-Z]+(?:[\s-][a-zA-Z]+)*$/;
+  if (!regex.test(country)) {
+    return "Please enter a valid country";
+  }
+  return "";
 };
 export const validateDay = (day) => {
   const regex = /^(0?[1-9]|[1-2][0-9]|3[0-1])$/;
   if (!regex.test(day)) {
-    return "Invalid day input. Please enter a valid day between 01 and 31.";
+    return "Please enter a valid day between 01 and 31.";
   }
 };
 
 export const validateMonth = (month) => {
   const regex = /^(0?[1-9]|1[0-2])$/;
   if (!regex.test(month)) {
-    return "Invalid month input. Please enter a valid month between 01 and 12.";
+    return "Please enter a month between 01 and 12.";
   }
 };
 export const validateYear = (year) => {
   const regex = /^(\d{4})$/;
   if (!regex.test(year)) {
-    return "Invalid year input. Please enter a valid year in the format YYYY.";
+    return "Please enter a valid year in the format YYYY.";
   }
 };
 export const validateMobileNumber = (number) => {
-  const regex =
-    /^[+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{3,4}[-\s\.]?[0-9]{3,4}$/im;
+  const regex = /^\d{10}$/;
   if (!regex.test(number)) {
-    return "Invalid mobile number input. Please enter a valid mobile number.";
+    return "Please enter a valid mobile number.";
   }
 };

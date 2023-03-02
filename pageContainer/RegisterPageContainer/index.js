@@ -1,3 +1,6 @@
+import router from "next/router";
+import { useRef, useState } from "react";
+
 import {
   Button,
   Container,
@@ -16,6 +19,8 @@ import {
   Text,
   useToast,
 } from "@chakra-ui/react";
+import { GrAdd } from "react-icons/gr";
+
 import {
   validateCountry,
   validateDay,
@@ -24,53 +29,110 @@ import {
   validateName,
   validateYear,
 } from "helpers/validation";
-import router from "next/router";
-import { useState } from "react";
-import { GrAdd } from "react-icons/gr";
+
+import { allowedExtensions } from "helpers/regex";
 import colors from "theme/foundations/colors";
 
-//----------------------USER DEFINED COMPONENTS-------------------------//
+//-------------------------------USER DEFINED COMPONENTS-----------------------------//
 
 //user defined divided flex Container
-const SplitContainer = ({ children }) => {
+const SplitContainer = (props) => {
+  const RESPONSIVE_FLEX_DIRECTION_ARRAY = [
+    "column",
+    "column",
+    "column",
+    "row",
+    "row",
+  ];
   return (
-    <Flex direction={["column", "column", "column", "row", "row"]} gap="3em">
-      {children}
-    </Flex>
+    <Flex
+      direction={RESPONSIVE_FLEX_DIRECTION_ARRAY}
+      gap="2em"
+      {...props}
+    ></Flex>
   );
 };
 
-//user defined form control container for Image Upload
-const FormControlImageContainer = ({ handleFileInputChange }) => {
+const FormContainer = (props) => {
   return (
-    <FormControl isRequired justify="center" align="center">
+    <Flex
+      as="form"
+      autoComplete="off"
+      autoCorrect="off"
+      direction="column"
+      gap="4em"
+      h="100vh"
+      {...props}
+    ></Flex>
+  );
+};
+
+const UserInputContentSection = (props) => {
+  return (
+    <Flex
+      direction="column"
+      mt="3em"
+      gap="2em"
+      align="center"
+      {...props}
+    ></Flex>
+  );
+};
+
+const UserInputFieldsSection = (props) => {
+  return <Flex direction="column" gap="3em" minW="80%" {...props}></Flex>;
+};
+//user defined form control container for Image Upload
+const ImageContainer = ({ handleFileInputChange, errorValue }) => {
+  const fileTypedInputRef = useRef();
+
+  const RESPONSIVE_SIZE_FOR_FLEX_IMAGE_INPUT_CONTAINER = [
+    "10em",
+    "10em",
+    "12em",
+    "14em",
+    "15em",
+  ];
+  const ACCEPTED_FILE_TYPES = ".jpeg,.jpg,.png";
+
+  return (
+    <FormControl
+      isRequired
+      justify="center"
+      align="center"
+      isInvalid={errorValue !== ""}
+    >
       <Flex
         direction="column"
-        bgColor="#D9D9D9"
+        bgColor={colors.gray}
         borderRadius="50%"
-        h={["10em", "10em", "12em", "14em", "15em"]}
-        w={["10em", "10em", "12em", "14em", "15em"]}
+        h={RESPONSIVE_SIZE_FOR_FLEX_IMAGE_INPUT_CONTAINER}
+        w={RESPONSIVE_SIZE_FOR_FLEX_IMAGE_INPUT_CONTAINER}
         justify="center"
         align="center"
         gap="1em"
-        onClick={() => document.querySelector("input[type=file]").click()}
+        onClick={() => {
+          fileTypedInputRef.current.click();
+        }}
       >
         <Input
           type="file"
           multiple
           onChange={handleFileInputChange}
-          accept=".jpeg,.jpg,.png"
-          style={{ display: "none" }}
+          accept={ACCEPTED_FILE_TYPES}
+          display="none"
+          ref={fileTypedInputRef}
         />
         <IconButton fontSize="4xl" fontWeight="extrabold" icon={<GrAdd />} />
         <Text fontWeight="bold">Upload Profile Picture</Text>
+        <FormErrorMessage color={colors.red}>{errorValue}</FormErrorMessage>
       </Flex>
     </FormControl>
   );
 };
 
 //user defined form control container for input fields
-const FormControlInputContainer = ({ label, children, errorValue }) => {
+const InputContainer = ({ label, children, errorValue }) => {
   return (
     <FormControl isRequired isInvalid={errorValue !== ""}>
       <FormLabel>{label}</FormLabel>
@@ -81,15 +143,10 @@ const FormControlInputContainer = ({ label, children, errorValue }) => {
 };
 
 ////user defined form control container for number input fields
-const FormControlNumberInputContainer = ({
-  min,
-  max,
-  children,
-  errorValue,
-}) => {
+const NumberInputContainer = ({ min, max, children, errorValue }) => {
   return (
     <FormControl isRequired isInvalid={errorValue !== ""}>
-      <NumberInput max={max} min={min}>
+      <NumberInput variant="outline" max={max} min={min}>
         {children}
         <NumberInputStepper>
           <NumberIncrementStepper />
@@ -101,29 +158,118 @@ const FormControlNumberInputContainer = ({
   );
 };
 
-//---------------------------------Main COMPONENT---------------------------------//
+const RegisterButton = (props) => {
+  return (
+    <Button
+      mr="2em"
+      mb="3em"
+      type="submit"
+      variant="outline"
+      {...props}
+    ></Button>
+  );
+};
+
+//---------------------------------MAIN COMPONENT---------------------------------//
 const RegisterPageContainer = () => {
-  //-----InternalStates
+  //---=----------------------InternalStates-----------------------------------//
   const [formValues, setFormValues] = useState({
-    country: "",
-    day: 0,
-    image: "",
-    mobileNumber: "",
-    month: 0,
     name: "",
+
+    country: "",
+    mobileNumber: "",
+    imageFile: [],
+
+    day: 0,
+    month: 0,
     year: 0,
   });
   const [formErrors, setFormErrors] = useState({
-    country: "",
-    day: "",
-    image: "",
-    mobileNumber: "",
-    month: "",
     name: "",
+
+    imageFile: "",
+    country: "",
+    mobileNumber: "",
+
+    day: "",
+    month: "",
     year: "",
   });
-  //STAte to handle Image files
-  const [selectedFiles, setSelectedFiles] = useState([]);
+
+  const toast = useToast();
+
+  //---------------METHOD TO IMPLEMENT DISABLED PROPERTY----------------//
+  const IS_FORM_FILLED = !(
+    formValues.imageFile.name === "" ||
+    formValues.country === "" ||
+    formValues.day === 0 ||
+    formValues.mobileNumber === "" ||
+    formValues.month === 0 ||
+    formValues.name === "" ||
+    formValues.year === 0
+  );
+  const ERRORS_DONT_EXIST =
+    formErrors.imageFile === "" &&
+    formErrors.country === "" &&
+    formErrors.day === "" &&
+    formErrors.mobileNumber === "" &&
+    formErrors.month === "" &&
+    formErrors.name === "" &&
+    formErrors.year === "";
+
+  ///-----------------ERROR HANDLING METHODS-------------------------//
+
+  const handleErrors = (keyName, value) => {
+    //create result variable
+    let result = "";
+
+    //check what value to give to result variable
+    switch (keyName) {
+      case "name":
+        result = validateName(value);
+        break;
+      case "month":
+        result = validateMonth(value);
+        break;
+      case "year":
+        result = validateYear(value);
+        break;
+      case "day":
+        result = validateDay(value);
+        break;
+      case "mobileNumber":
+        result = validateMobileNumber(value);
+        break;
+      case "country":
+        result = validateCountry(value);
+        break;
+
+      default:
+        break;
+    }
+
+    // update result to error state
+    if (result) {
+      setFormErrors((prevErrState) => ({ ...prevErrState, [keyName]: result }));
+    } else {
+      setFormErrors((prevErrState) => ({ ...prevErrState, [keyName]: "" }));
+    }
+  };
+
+  ///-----------------Change HANDLING METHODS-------------------------//
+
+  const handleFileInputChange = (event) => {
+    const file = event.target.files[0];
+    allowedExtensions.test(file.name)
+      ? setFormValues((oldState) => ({
+          ...oldState,
+          imageFile: file,
+        }))
+      : setFormErrors((prevErrState) => ({
+          ...prevErrState,
+          imageFile: "invalid format",
+        }));
+  };
 
   //handle state change for local form states
   const handleFormChange = (e) => {
@@ -133,117 +279,58 @@ const RegisterPageContainer = () => {
     }));
   };
 
-  ///-----------------ERROR HANDLING METHODS-------------------------//
-
-  const handleNameErrors = (name) => {
-    const result = validateName(name);
-    if (!(result === "")) {
-      setFormErrors((prevErrState) => ({ ...prevErrState, name: result }));
-    } else {
-      setFormErrors((prevErrState) => ({ ...prevErrState, name: "" }));
-    }
-  };
-  const handleDayErrors = (day) => {
-    const result = validateDay(day);
-    if (!(result === "")) {
-      setFormErrors((prevErrState) => ({ ...prevErrState, day: result }));
-    } else {
-      setFormErrors((prevErrState) => ({ ...prevErrState, day: "" }));
-    }
-  };
-  const handleMonthErrors = (month) => {
-    const result = validateMonth(month);
-    if (!(result === "")) {
-      setFormErrors((prevErrState) => ({ ...prevErrState, month: result }));
-    } else {
-      setFormErrors((prevErrState) => ({ ...prevErrState, month: "" }));
-    }
-  };
-  const handleYearErrors = (year) => {
-    const result = validateYear(year);
-    if (!(result === "")) {
-      setFormErrors((prevErrState) => ({ ...prevErrState, year: result }));
-    } else {
-      setFormErrors((prevErrState) => ({ ...prevErrState, year: "" }));
-    }
-  };
-  const handleMobileNumberErrors = (number) => {
-    const result = validateMobileNumber(number);
-    if (!(result === "")) {
-      setFormErrors((prevErrState) => ({
-        ...prevErrState,
-        mobileNumber: result,
-      }));
-    } else {
-      setFormErrors((prevErrState) => ({ ...prevErrState, mobileNumber: "" }));
-    }
-  };
-  const handleCountryErrors = (country) => {
-    const result = validateCountry(country);
-    if (!(result === "")) {
-      setFormErrors((prevErrState) => ({ ...prevErrState, country: result }));
-    } else {
-      setFormErrors((prevErrState) => ({ ...prevErrState, country: "" }));
-    }
-  };
-  //handleChange method for image file
-  const handleFileInputChange = (event) => {
-    const files = event.target.files;
-    const allowedExtensions = /(\.jpeg|\.jpg|\.png)$/i;
-    const selectedFilesArray = Array.from(files).filter((file) =>
-      allowedExtensions.test(file.name)
-    );
-    setSelectedFiles(selectedFilesArray);
-  };
-
-  //handle method for final form submission
+  //final form submission
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log(selectedFiles); // Do something with the selected files
+
+    // Do something with the selected files
+    if (ERRORS_DONT_EXIST) {
+      console.log(formValues);
+      //api call to save data
+      // router.push("/")
+    } else {
+      console.log(formErrors);
+
+      toast({
+        title: "Error!!",
+        description: "Please resolve errors",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+        position: "bottom-left",
+        containerStyle: {
+          backgroundColor: colors.red,
+        },
+      });
+    }
   };
-  console.log(formValues);
+
   //MAIN REGISTER PAGE VIEW COMPONENT
   return (
     <Container minW="90%">
-      {/* Form Container */}
-      <Flex
-        as="form"
-        autoComplete="off"
-        autoCorrect="off"
-        direction="column"
-        gap="4em"
-        h="100vh"
-        onSubmit={handleSubmit}
-      >
-        <Flex direction="column" mt="3em" gap="2em" align="center">
-          <FormControlImageContainer
+      <FormContainer onSubmit={handleSubmit}>
+        <UserInputContentSection>
+          <ImageContainer
             handleFileInputChange={handleFileInputChange}
+            errorValue={formErrors.imageFile}
           />
-          {/* //input fields */}
-          <Flex direction="column" gap="3em" minW="80%">
-            {/* Row 1 of input fields */}
+          <UserInputFieldsSection>
             <SplitContainer>
-              {/* NAME INPUT */}
-              <FormControlInputContainer
-                errorValue={formErrors.name}
-                label="Name"
-              >
+              <InputContainer errorValue={formErrors.name} label="Name">
                 <Input
                   name="name"
                   onBlur={(e) => {
-                    handleNameErrors(e.target.value);
+                    handleErrors(e.target.name, e.target.value);
                   }}
                   onChange={handleFormChange}
                   placeholder="Someone Surname"
-                  type="text"
                   variant="outline"
                 />
-              </FormControlInputContainer>
+              </InputContainer>
 
-              <FormControlInputContainer label="Date Of Birth">
+              <InputContainer label="Date Of Birth">
                 <SplitContainer>
-                  {/* Year INPUT */}
-                  <FormControlNumberInputContainer
+                  <NumberInputContainer
                     errorValue={formErrors.year}
                     min={1923}
                     max={2023}
@@ -252,14 +339,13 @@ const RegisterPageContainer = () => {
                       maxLength={4}
                       name="year"
                       onBlur={(e) => {
-                        handleYearErrors(e.target.value);
+                        handleErrors(e.target.name, e.target.value);
                       }}
                       onChange={handleFormChange}
                       placeholder="Year"
                     />
-                  </FormControlNumberInputContainer>
-                  {/* Month INPUT */}
-                  <FormControlNumberInputContainer
+                  </NumberInputContainer>
+                  <NumberInputContainer
                     errorValue={formErrors.month}
                     min={1}
                     max={12}
@@ -268,14 +354,13 @@ const RegisterPageContainer = () => {
                       maxLength={2}
                       name="month"
                       onBlur={(e) => {
-                        handleMonthErrors(e.target.value);
+                        handleErrors(e.target.name, e.target.value);
                       }}
                       onChange={handleFormChange}
                       placeholder="Month"
                     />
-                  </FormControlNumberInputContainer>
-                  {/* DAY INPUT */}
-                  <FormControlNumberInputContainer
+                  </NumberInputContainer>
+                  <NumberInputContainer
                     errorValue={formErrors.day}
                     min={1}
                     max={31}
@@ -284,74 +369,50 @@ const RegisterPageContainer = () => {
                       maxLength={2}
                       name="day"
                       onBlur={(e) => {
-                        handleDayErrors(e.target.value);
+                        handleErrors(e.target.name, e.target.value);
                       }}
                       onChange={handleFormChange}
                       placeholder="Day"
                     />
-                  </FormControlNumberInputContainer>
+                  </NumberInputContainer>
                 </SplitContainer>
-              </FormControlInputContainer>
+              </InputContainer>
             </SplitContainer>
-            {/* Row 2 of input fields */}
             <SplitContainer>
-              {/* MObileNumber INPUT */}
-              <FormControlInputContainer
+              <InputContainer
                 errorValue={formErrors.mobileNumber}
                 label="Mobile Number"
               >
-                <NumberInput>
+                <NumberInput variant="outline">
                   <NumberInputField
                     maxLength={10}
                     name="mobileNumber"
                     onBlur={(e) => {
-                      handleMobileNumberErrors(e.target.value);
+                      handleErrors(e.target.name, e.target.value);
                     }}
                     onChange={handleFormChange}
-                    placeholder="10-Digit Mobile Number"
+                    placeholder={`${10}-Digit Mobile Number`}
                   />
                 </NumberInput>
-              </FormControlInputContainer>
-              {/* COUNTRY INPUT */}
-              <FormControlInputContainer
-                errorValue={formErrors.country}
-                label="Country"
-              >
+              </InputContainer>
+              <InputContainer errorValue={formErrors.country} label="Country">
                 <Input
                   name="country"
                   onBlur={(e) => {
-                    handleCountryErrors(e.target.value);
+                    handleErrors(e.target.name, e.target.value);
                   }}
                   onChange={handleFormChange}
-                  type="text"
                   variant="outline"
                   placeholder="Country of Birth"
                 />
-              </FormControlInputContainer>
+              </InputContainer>
             </SplitContainer>
-          </Flex>
-        </Flex>
-        {/* //submit button */}
+          </UserInputFieldsSection>
+        </UserInputContentSection>
         <Flex justify="end">
-          <Button
-            disabled={
-              selectedFiles.length === 0 ||
-              formValues.country === "" ||
-              formValues.day === 0 ||
-              formValues.mobileNumber === "" ||
-              formValues.month === 0 ||
-              formValues.name === "" ||
-              formValues.year === 0
-            }
-            mr="2em"
-            mb="3em"
-            type="submit"
-            variant="outline"
-          >
-            Register
-          </Button>
+          <RegisterButton disabled={!IS_FORM_FILLED}>Register</RegisterButton>
         </Flex>
-      </Flex>
+      </FormContainer>
     </Container>
   );
 };

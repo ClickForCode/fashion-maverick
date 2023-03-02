@@ -14,6 +14,7 @@ const theme = extendTheme({
     Button,
     Input,
     Heading,
+    NumberInput: { ...Input },
   },
   fonts: {
     body: "Montserrat",
