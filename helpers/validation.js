@@ -1,3 +1,5 @@
+import { countryList } from "./countryList";
+
 export const validateEmail = (email) => {
   if (email === "") {
     return "Please Enter an Email ID";
@@ -25,4 +27,54 @@ export const validatePassword = (password) => {
     return "Password must Contain at least one big alphabet, one Small alphabet, one number, and one special character";
   }
   return "";
+};
+
+export const validateName = (name) => {
+  if (name === "") {
+    return "Please Enter a Name";
+  }
+  if (name.length < 4) {
+    return "Name must be at least 3 characters long";
+  }
+  //regex for full name
+
+  const regex = /^[a-z A-Z]{3,50}$/;
+  if (!regex.test(name)) {
+    return "Please keep it simple without special characters or numbers";
+  }
+  return "";
+};
+
+export const validateCountry = (country) => {
+  const capitalized = country.charAt(0).toUpperCase() + country.slice(1);
+  const result = countryList.includes(capitalized)
+    ? ""
+    : "Please enter correct country";
+  console.log(country, capitalized, result);
+};
+export const validateDay = (day) => {
+  const regex = /^(0?[1-9]|[1-2][0-9]|3[0-1])$/;
+  if (!regex.test(day)) {
+    return "Invalid day input. Please enter a valid day between 01 and 31.";
+  }
+};
+
+export const validateMonth = (month) => {
+  const regex = /^(0?[1-9]|1[0-2])$/;
+  if (!regex.test(month)) {
+    return "Invalid month input. Please enter a valid month between 01 and 12.";
+  }
+};
+export const validateYear = (year) => {
+  const regex = /^(\d{4})$/;
+  if (!regex.test(year)) {
+    return "Invalid year input. Please enter a valid year in the format YYYY.";
+  }
+};
+export const validateMobileNumber = (number) => {
+  const regex =
+    /^[+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{3,4}[-\s\.]?[0-9]{3,4}$/im;
+  if (!regex.test(number)) {
+    return "Invalid mobile number input. Please enter a valid mobile number.";
+  }
 };

@@ -7,6 +7,9 @@ const Input = {
     field: {
       border: `3px solid ${colors.black}`,
       color: colors.black,
+      _placeholder: {
+        color: colors.gray,
+      },
     },
   },
   // The size styles for each part
