@@ -15,7 +15,7 @@ const colors = {
 
   lightRed: "#FEEBF3",
 
-  red: "#F2B9B9",
+  red: "#d93535",
 
   redWhite: "#FEFAF9",
 

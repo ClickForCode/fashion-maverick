@@ -32,7 +32,7 @@ const buttonOverrides = {
 
     outline: {
       backgroundColor: "transparent",
-      border: `3px solid ${colors.black}`,
+      border: `1px solid ${colors.black}`,
       borderRadius: "40px",
       color: colors.black,
     },

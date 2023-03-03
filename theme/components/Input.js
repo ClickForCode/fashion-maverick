@@ -5,8 +5,11 @@ const Input = {
   // The base styles for each part
   baseStyle: {
     field: {
-      border: `2px solid ${colors.gray}`,
-      color: colors.gray,
+      border: `3px solid ${colors.black}`,
+      color: colors.black,
+      _placeholder: {
+        color: colors.gray,
+      },
     },
   },
   // The size styles for each part
